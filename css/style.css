@@ -27,10 +27,11 @@
     --font-body:'Outfit',-apple-system,'Segoe UI',Roboto,sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{font-family:var(--font-body);background:var(--cream);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{font-family:var(--font-body);background:var(--cream);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased;
+    overflow-x:hidden;overflow-wrap:break-word}
 h1,h2,h3{font-family:var(--font-title);line-height:1.2;color:var(--plum)}
-img{max-width:100%;display:block}
+img{max-width:100%;height:auto;display:block}
 a{color:inherit}
 .hidden{display:none!important}
 .container{max-width:1180px;margin:0 auto;padding:0 20px}
@@ -41,7 +42,7 @@ a{color:inherit}
 /* ── Boutons ── */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;cursor:pointer;
     font-family:var(--font-body);font-weight:600;font-size:.98rem;padding:13px 26px;border-radius:999px;
-    transition:transform .15s ease,box-shadow .2s ease,background .2s ease;text-decoration:none;white-space:nowrap}
+    transition:transform .15s ease,box-shadow .2s ease,background .2s ease;text-decoration:none;white-space:normal;text-align:center}
 .btn:hover{transform:translateY(-2px)}
 .btn:active{transform:translateY(0)}
 .btn-primary{background:linear-gradient(135deg,var(--plum-2),var(--plum));color:#fff;box-shadow:0 8px 22px rgba(42,27,46,.35)}
@@ -177,7 +178,7 @@ a{color:inherit}
 .form-group{margin-bottom:16px;display:flex;flex-direction:column;gap:6px}
 .form-group label{font-weight:600;font-size:.88rem;color:var(--plum)}
 .form-group input,.form-group select,.form-group textarea,.filters input,.filters select,.tracking-form input{
-    font-family:var(--font-body);font-size:.95rem;padding:12px 15px;border:1.5px solid var(--line);border-radius:12px;background:#fffdf8;outline:none;transition:.2s;width:100%}
+    font-family:var(--font-body);font-size:16px;padding:12px 15px;border:1.5px solid var(--line);border-radius:12px;background:#fffdf8;outline:none;transition:.2s;width:100%;max-width:100%}
 .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,162,75,.18)}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .form-note{font-size:.82rem;color:var(--muted);margin-top:12px;text-align:center}
@@ -254,6 +255,11 @@ a{color:inherit}
 .admin-sidebar-foot{padding:16px;display:flex;flex-direction:column;gap:10px}
 .admin-sidebar-foot .btn{font-size:.85rem;padding:10px}
 .btn-outline.light{border-color:rgba(255,255,255,.35);color:#fff}
+/* Tiroirs mobiles : menu public + espace pro */
+.nav-backdrop{position:fixed;inset:0;background:rgba(26,14,29,.55);backdrop-filter:blur(3px);z-index:85;
+    opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
+.nav-backdrop.show{opacity:1;visibility:visible}
+body.drawer-open{overflow:hidden}
 .admin-main{flex:1;min-width:0;padding:0 28px 50px}
 .admin-topbar{display:flex;align-items:center;gap:16px;padding:22px 0}
 .admin-topbar h2{font-size:1.6rem}
@@ -308,8 +314,8 @@ canvas{width:100%!important;max-height:260px}
 .btn-mini.pay{background:var(--green);border-color:var(--green);color:#fff}
 
 .filters{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap}
-.filters input{flex:2;min-width:200px}
-.filters select{flex:1;min-width:150px}
+.filters input{flex:2 1 200px;min-width:0}
+.filters select{flex:1 1 150px;min-width:0}
 
 /* Finance */
 .finance-layout{display:grid;grid-template-columns:380px 1fr;gap:22px;align-items:start}
@@ -322,7 +328,7 @@ canvas{width:100%!important;max-height:260px}
 .pricing-row img{width:64px;height:64px;object-fit:cover;border-radius:12px}
 .pricing-row strong{display:block}
 .pricing-row small{color:var(--muted)}
-.pricing-row input{font-family:var(--font-body);padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;width:100%}
+.pricing-row input{font-family:var(--font-body);font-size:16px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;width:100%}
 .locked{opacity:.6;pointer-events:none}
 .perm-note{background:#fdf3d7;border:1px solid #e8cf8f;color:#7a5b16;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:.88rem}
 
@@ -366,30 +372,110 @@ canvas{width:100%!important;max-height:260px}
 .toast.out{opacity:0;transform:translateX(40px);transition:.3s}
 
 /* ── Responsive ── */
+/* Tablette et téléphone en paysage */
 @media(max-width:960px){
     .booking-layout,.charts-grid,.finance-layout{grid-template-columns:1fr}
     .footer-grid{grid-template-columns:1fr 1fr}
-    .main-nav{position:fixed;top:0;right:-280px;width:260px;height:100vh;background:var(--plum);flex-direction:column;
-        padding:80px 24px;gap:8px;transition:.3s;z-index:90;margin:0}
-    .main-nav.open{right:0}
-    .main-nav a{color:#fff;font-size:1.05rem}
+    /* Tiroir du menu public : ne dépasse jamais l'écran */
+    /* Fermé = hors écran quelle que soit sa largeur (translateX), jamais de bande visible */
+    .main-nav{position:fixed;top:0;right:0;width:min(86vw,300px);height:100vh;height:100dvh;background:var(--plum);
+        flex-direction:column;padding:80px 24px;gap:8px;transition:transform .3s ease;z-index:90;margin:0;
+        overflow-y:auto;box-shadow:-18px 0 45px rgba(26,14,29,.35);transform:translateX(105%);
+        padding-bottom:calc(80px + env(safe-area-inset-bottom))}
+    .main-nav.open{transform:translateX(0)}
+    .main-nav a{color:#fff;font-size:1.05rem;padding:13px 16px}
     .main-nav a.active{background:var(--gold);color:#2a1b2e}
     .burger{display:block}
     .btn-cart span{display:none}
-    .admin-sidebar{position:fixed;left:-300px;transition:.3s;height:100vh}
-    .admin-sidebar.open{left:0}
+    .btn-cart{padding:9px 13px}
+    /* Tiroir de l'espace pro */
+    .admin-sidebar{position:fixed;left:0;top:0;transition:transform .3s ease;height:100vh;height:100dvh;width:min(84vw,280px);
+        overflow-y:auto;padding-bottom:env(safe-area-inset-bottom);box-shadow:18px 0 45px rgba(26,14,29,.35);
+        transform:translateX(-105%)}
+    .admin-sidebar.open{transform:translateX(0)}
     .admin-topbar .burger{display:block}
     .admin-main{padding:0 16px 40px}
+    .header-inner{padding:12px 16px;gap:12px}
+    .hero{padding:0}
+    .hero-content{padding:64px 20px}
+    .page-hero{padding:64px 0}
+    .section-head{margin:42px 0 24px}
+    .section-head h2{font-size:1.6rem}
+    .pack-inner{padding:34px 20px}
+    .pricing-row{grid-template-columns:56px 1fr}
+    .pricing-row input{grid-column:2}
 }
+
+/* Téléphones (portrait) */
 @media(max-width:600px){
+    /* Grilles qui débordaient : une seule colonne, marges réduites */
+    .category-grid,.cakes-grid,.services-grid,.reviews-grid,.steps,.guide-steps,.team-grid,
+    .kpi-grid,.kpi-grid.small{grid-template-columns:1fr;gap:14px}
     .form-row{grid-template-columns:1fr}
     .footer-grid{grid-template-columns:1fr}
-    .hero{min-height:540px}
     .tracking-form{flex-direction:column}
-    .pricing-row{grid-template-columns:52px 1fr}
-    .pricing-row input{grid-column:2}
+    .tracking-form .btn{width:100%}
     .order-detail-grid{grid-template-columns:1fr}
-    .panel{padding:20px}
+    .panel{padding:18px}
+    .container{padding:0 16px}
+    .hero{min-height:0;border-radius:0 0 22px 22px}
+    .hero-content{padding:52px 16px 44px}
+    .hero-content p{font-size:1rem}
+    .hero-cta{gap:10px}
+    .hero-cta .btn{flex:1 1 100%}
+    .hero-stats{gap:18px}
+    .hero-stats strong{font-size:1.35rem}
+    .page-hero{padding:52px 0}
+    .page-hero h1{font-size:1.85rem}
+    .info-card{padding:20px}
+    .confirm-box{padding:12px}
+    .confirm-box .big{font-size:2.8rem}
+    .confirm-ref{font-size:1.05rem;padding:9px 18px;letter-spacing:.5px}
+    .confirm-actions .btn,.cart-empty-actions .btn{flex:1 1 100%}
+    .modal-overlay{padding:12px;align-items:flex-end}
+    .modal{padding:24px 20px;max-height:88vh;max-height:88dvh;border-radius:20px 20px 0 0}
+    .modal.large{max-width:none}
+    .modal-actions .btn{flex:1 1 100%}
+    .toast-wrap{left:12px;right:12px;bottom:12px;max-width:none}
+    .toast{font-size:.88rem}
+    .wa-float{bottom:calc(16px + env(safe-area-inset-bottom))}
+    .admin-topbar{padding:16px 0;gap:10px;flex-wrap:wrap}
+    .admin-topbar h2{font-size:1.25rem}
+    .admin-date{width:100%;margin-left:0;font-size:.8rem}
+    .admin-brand{font-size:1.15rem;padding:20px 20px 10px}
+    .admin-profile{padding:12px 20px}
+    .admin-nav button{padding:12px 14px;font-size:.9rem}
+    .editor-card{padding:14px}
+    .table{font-size:.82rem}
+    .btn{padding:12px 20px;font-size:.94rem}
+    .filters input,.filters select{min-width:0;flex:1 1 100%}
+    .row-actions{gap:5px}
+    .legal-body{padding:0}
+}
+
+/* Très petits écrans (≤ 380 px : Galaxy A, Redmi 9A, iPhone SE) */
+@media(max-width:380px){
+    .container,.header-inner{padding-left:12px;padding-right:12px}
+    .brand{font-size:1.12rem;gap:7px}
+    .brand-gift{font-size:1.35rem}
+    .btn-pro{padding:9px 13px;font-size:.82rem}
+    .hero-content h1{font-size:1.75rem}
+    .section-head h2{font-size:1.42rem}
+    .panel{padding:15px}
+    .kpi{padding:15px}
+    .kpi strong{font-size:1.25rem}
+    .cart-item img{width:60px;height:60px}
+    .pricing-row{grid-template-columns:44px 1fr;gap:10px}
+    .pricing-row img{width:44px;height:44px}
+    .btn{padding:11px 15px;font-size:.9rem}
+    .team-card{padding:18px}
+}
+
+/* Téléphone en paysage : hauteur très faible, on compacte les tiroirs */
+@media(max-height:480px) and (max-width:960px){
+    .main-nav{padding:64px 20px 24px}
+    .admin-sidebar{overflow-y:auto}
+    .hero-content{padding:40px 20px}
 }
 @media print{
     body *{visibility:hidden}
@@ -471,5 +557,8 @@ label.btn-mini{cursor:pointer}
 }
 @media (max-width: 720px) {
     .cloud-badge { font-size: 11px; padding: 4px 9px; }
-    .admin-topbar .cloud-badge { display: none; }
+    /* ⚠️ On GARDE le badge visible sur téléphone : c'est là qu'on vérifie la synchro. */
+    /* Si la place manque, il passe simplement à la ligne sous le titre. */
+    .admin-topbar { flex-wrap: wrap; }
+    .admin-topbar .cloud-badge { order: 3; }
 }

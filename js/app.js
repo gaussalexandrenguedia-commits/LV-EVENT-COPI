@@ -241,12 +241,44 @@ async function migrateAdminPasswords() {
 }
 const isSuper = () => currentAdmin()?.role === 'super';
 
+/* ─────────── MENUS MOBILES (tiroirs) ─────────── */
+/* Un seul tiroir ouvert à la fois ; le fond assombri bloque la page derrière. */
+function updateDrawerState() {
+    const navOpen = Boolean($('main-nav') && $('main-nav').classList.contains('open'));
+    const sideOpen = Boolean($('admin-sidebar') && $('admin-sidebar').classList.contains('open'));
+    document.body.classList.toggle('drawer-open', navOpen || sideOpen);
+    const backdrop = $('nav-backdrop');
+    if (backdrop) backdrop.classList.toggle('show', navOpen || sideOpen);
+    [$('burger'), $('admin-burger')].forEach(b => {
+        if (b) b.setAttribute('aria-expanded', String(b === $('burger') ? navOpen : sideOpen));
+    });
+}
+function closeDrawers() {
+    const nav = $('main-nav'); if (nav) nav.classList.remove('open');
+    const side = $('admin-sidebar'); if (side) side.classList.remove('open');
+    updateDrawerState();
+}
+function toggleNav() {
+    const nav = $('main-nav'); if (!nav) return;
+    const willOpen = !nav.classList.contains('open');
+    closeDrawers();
+    if (willOpen) nav.classList.add('open');
+    updateDrawerState();
+}
+function toggleAdminSidebar() {
+    const side = $('admin-sidebar'); if (!side) return;
+    const willOpen = !side.classList.contains('open');
+    closeDrawers();
+    if (willOpen) side.classList.add('open');
+    updateDrawerState();
+}
+
 /* ─────────── NAVIGATION CLIENT ─────────── */
 function showView(name) {
     document.querySelectorAll('#client-app .view').forEach(v => v.classList.add('hidden'));
     $('view-' + name).classList.remove('hidden');
     document.querySelectorAll('.main-nav a').forEach(a => a.classList.toggle('active', a.dataset.nav === name));
-    $('main-nav').classList.remove('open');
+    closeDrawers();
     if (name === 'booking') { renderCart(); newCaptcha(); }
     window.scrollTo({top: 0, behavior: 'smooth'});
 }
@@ -654,6 +686,7 @@ async function doLogin(e) {
     return false;
 }
 function logout() {
+    closeDrawers();
     store.del('lv_session');
     if (cloudOn()) { LVCloud.logout().catch(() => {}); }
     exitAdmin();
@@ -693,6 +726,7 @@ function renderCloudBadge() {
     el.title = 'Commandes, tarifs et contenus enregistrés sur le serveur : visibles sur tous vos appareils.';
 }
 function enterAdmin() {
+    closeDrawers();
     $('client-app').classList.add('hidden');
     $('site-header').classList.add('hidden');
     $('site-footer').classList.add('hidden');
@@ -734,7 +768,7 @@ function showAdmin(name) {
     document.querySelectorAll('.admin-view').forEach(v => v.classList.add('hidden'));
     $('admin-' + name).classList.remove('hidden');
     document.querySelectorAll('.admin-nav button').forEach(b => b.classList.toggle('active', b.dataset.admin === name));
-    $('admin-sidebar').classList.remove('open');
+    closeDrawers();
     const titles = {dashboard: 'Tableau de bord', orders: 'Commandes', finance: 'Gestion financière', providers: 'Prestataires', pricing: 'Tarifs & catalogue', site: 'Contenu du site', team: 'Administrateurs', guide: 'Guide d\u2019utilisation'};
     $('admin-title').textContent = titles[name];
     if (name === 'dashboard') renderDashboard();
@@ -1703,9 +1737,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.modal-overlay').forEach(m =>
         m.addEventListener('click', (e) => { if (e.target === m) m.classList.add('hidden'); }));
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+        if (e.key !== 'Escape') return;
+        document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+        closeDrawers();
     });
+    /* Fond assombri : un appui referme le tiroir (menu ou espace pro) */
+    const backdrop = $('nav-backdrop');
+    if (backdrop) backdrop.addEventListener('click', closeDrawers);
+    let wasNarrow = window.innerWidth <= 960;
     window.addEventListener('resize', () => {
+        const narrow = window.innerWidth <= 960;
+        // Rotation, changement de palier ou retour sur grand écran : on range les tiroirs
+        // (le clavier virtuel, lui, ne franchit jamais le palier → le menu reste ouvert).
+        if (!narrow || narrow !== wasNarrow) closeDrawers();
+        wasNarrow = narrow;
         if (!$('admin-app').classList.contains('hidden') && !$('admin-dashboard').classList.contains('hidden')) renderDashboard();
     });
 

@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>LV Surprise Event — Anniversaires surprises &amp; événements sur mesure | Douala &amp; Yaoundé</title>
     <meta name="description" content="LV Surprise Event — décorations, gâteaux sur mesure, bouquets d'argent, paniers surprises et animations musicales à Douala & Yaoundé. Composez votre surprise en ligne, devis instantané gratuit.">
     <meta name="keywords" content="anniversaire surprise Douala, anniversaire surprise Yaoundé, gâteau sur mesure Cameroun, décoration anniversaire, bouquet d'argent, LV Surprise Event">
@@ -40,6 +40,7 @@
     </script>
 </head>
 <body>
+<div class="nav-backdrop" id="nav-backdrop" aria-hidden="true"></div>
 <a class="skip-link" href="#client-app">Aller au contenu principal</a>
 <noscript><div style="padding:16px;text-align:center;background:#fdf3d7">⚠️ Ce site nécessite JavaScript pour fonctionner. Contactez-nous par téléphone ou WhatsApp pour réserver.</div></noscript>
 
@@ -69,7 +70,7 @@
                 <span class="cart-count" id="cart-count">0</span>
             </button>
             <button class="btn-pro" onclick="openLogin()">🔐 Espace Pro</button>
-            <button class="burger" id="burger" aria-label="Menu" onclick="document.getElementById('main-nav').classList.toggle('open')">☰</button>
+            <button class="burger" id="burger" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="main-nav" onclick="toggleNav()">☰</button>
         </div>
     </div>
 </header>
@@ -295,7 +296,7 @@
             </div>
             <div class="panel">
                 <div class="tracking-form">
-                    <input type="text" id="tracking-input" placeholder="Référence (ex : LV-2026-123456)" autocomplete="off">
+                    <input type="text" id="tracking-input" placeholder="Référence (ex : LV-2026-123456)" autocomplete="off" autocapitalize="characters">
                     <input type="tel" id="tracking-phone" placeholder="Téléphone de la commande" autocomplete="tel" inputmode="tel">
                     <button class="btn btn-primary" onclick="trackOrder()">Rechercher</button>
                 </div>
@@ -464,7 +465,7 @@
 
     <div class="admin-main">
         <div class="admin-topbar">
-            <button class="burger" onclick="document.getElementById('admin-sidebar').classList.toggle('open')">☰</button>
+            <button class="burger" id="admin-burger" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="admin-sidebar" onclick="toggleAdminSidebar()">☰</button>
             <h2 id="admin-title">Tableau de bord</h2>
             <span class="cloud-badge local" id="cloud-status" title="État de la synchronisation">💾 Mode local</span>
             <span class="admin-date" id="admin-date"></span>
@@ -500,7 +501,7 @@
         <section id="admin-orders" class="admin-view hidden">
             <div class="panel">
                 <div class="filters">
-                    <input type="search" id="orders-search" placeholder="🔍 Rechercher (client, réf, lieu…)" oninput="renderAdminOrders()">
+                    <input type="search" id="orders-search" autocapitalize="none" autocorrect="off" placeholder="🔍 Rechercher (client, réf, lieu…)" oninput="renderAdminOrders()">
                     <select id="orders-filter-status" onchange="renderAdminOrders()">
                         <option value="">Tous statuts</option>
                         <option>En attente</option>
@@ -580,7 +581,7 @@
                         <div class="form-group"><label>Spécialité</label><input id="prov-skill" required placeholder="Ex : Saxophoniste"></div>
                     </div>
                     <div class="form-row">
-                        <div class="form-group"><label>Téléphone</label><input id="prov-phone" placeholder="6 90 …"></div>
+                        <div class="form-group"><label>Téléphone</label><input type="tel" id="prov-phone" placeholder="6 90 …" inputmode="tel" autocapitalize="none"></div>
                         <div class="form-group"><label>Tarif / prestation</label><input id="prov-cost" type="number" min="0" value="30000"></div>
                     </div>
                     <button class="btn btn-primary btn-sm" type="submit">Enregistrer</button>
@@ -684,8 +685,8 @@
             <div class="panel">
                 <h3>📞 Coordonnées &amp; horaires (pied de page + factures)</h3>
                 <div class="form-row">
-                    <div class="form-group"><label>Téléphone</label><input id="site-phone" class="site-field"></div>
-                    <div class="form-group"><label>Email</label><input id="site-email" class="site-field"></div>
+                    <div class="form-group"><label>Téléphone</label><input type="tel" id="site-phone" class="site-field" inputmode="tel" autocapitalize="none" autocomplete="tel"></div>
+                    <div class="form-group"><label>Email</label><input type="email" id="site-email" class="site-field" inputmode="email" autocapitalize="none" spellcheck="false"></div>
                 </div>
                 <div class="form-row">
                     <div class="form-group"><label>WhatsApp (numéro de réception des commandes, format international sans +)</label><input id="site-whatsapp" class="site-field" placeholder="Ex : 237690000000"></div>
@@ -850,7 +851,7 @@
         <button class="modal-close" onclick="closeLogin()">×</button>
         <div class="login-head">🔐<h2>Espace Pro</h2><p>Réservé aux administrateurs LV Surprise Event</p></div>
         <form onsubmit="return doLogin(event)">
-            <div class="form-group"><label>Identifiant</label><input type="text" id="login-user" required placeholder="vanelle ou assistant" autocomplete="username"></div>
+            <div class="form-group"><label>Identifiant</label><input type="text" id="login-user" required placeholder="vanelle ou assistant" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false"></div>
             <div class="form-group"><label>Mot de passe</label><input type="password" id="login-pass" required placeholder="••••••••" autocomplete="current-password"></div>
             <p class="login-error hidden" id="login-error">Identifiants incorrects</p>
             <button class="btn btn-primary btn-block" type="submit">Se connecter</button>
