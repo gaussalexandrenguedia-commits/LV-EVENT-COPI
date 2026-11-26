@@ -58,17 +58,11 @@ comptes (ajout, réinitialisation de mot de passe, retrait) se fait dans l'ongle
 - Les changements faits dans l'admin (prix, photos, textes) sont **publiés immédiatement** pour tous
   les visiteurs, sur tous les appareils — plus besoin de modifier le code.
 
-### 📱 Confort sur tous les téléphones
-- **Aucun débordement horizontal** : les grilles passent en une colonne dès 600 px, avec un palier
-  dédié aux très petits écrans (≤ 380 px : Galaxy A, Redmi 9A, iPhone SE).
-- **Menus en tiroir** (site public et espace pro) : fond assombri, fermeture par appui à côté,
-  touche Échap ou changement d'onglet, défilement de la page bloqué pendant l'ouverture.
-- **Pas de zoom automatique sur iPhone** : tous les champs sont à 16 px minimum.
-- **Clavier adapté** : téléphone → pavé numérique, email → clavier e-mail, et plus de majuscule
-  automatique sur l'identifiant de connexion (source d'échec de connexion sur mobile).
-- **Encoche et barres d'URL** : `viewport-fit=cover`, `env(safe-area-inset-bottom)` et hauteur
-  dynamique (`100dvh`) pour que rien ne passe sous la barre du navigateur.
-- Le badge **🟢 Synchronisé** reste visible sur téléphone (il était masqué avant 720 px).
+### 📱 Affichage sur téléphone
+Le site est utilisable sur mobile (menus ☰, grilles qui passent en une colonne sous 960 px).
+Une refonte mobile plus poussée a été **annulée** : elle cassait l'ouverture du menu ☰
+(l'écran s'assombrissait mais le menu restait caché dessous). À reprendre avec des tests
+de rendu réels avant publication.
 
 ## 🛠️ Technologies
 - HTML5, CSS3 (responsive), JavaScript Vanilla (ES6+, graphiques canvas maison, sans dépendance)
