@@ -104,7 +104,7 @@ const DEFAULT_PRESTATIONS = [
      includes: '1h de live · Sonorisation · Playlist dédicacée'}
 ];
 /* Mots de passe par défaut UNIQUEMENT sous forme hachée (SHA-256 salé).
-   ⚠️ À CHANGER immédiatement après la première connexion (onglet Équipe),
+   ⚠️ À CHANGER immédiatement après la première connexion (onglet Administrateurs),
    et à supprimer du README / de tout document public. */
 const DEFAULT_ADMINS = [
     {username: 'vanelle', passwordHash: 'e91bb635ed044f5dae7ce74e75049a7bb77b280c25d81bcb5b998fe01c2acd39', role: 'super', name: 'Vanelle L.', title: 'Fondatrice', mustChangePassword: true},
@@ -680,7 +680,7 @@ async function doLogin(e) {
     closeLogin(); enterAdmin();
     toast(`Bienvenue ${admin.name} 👑`, 'success');
     if (admin.mustChangePassword) {
-        toast('⚠️ Pensez à changer votre mot de passe (onglet Équipe) avant l\u2019ouverture.', 'error');
+        toast('⚠️ Pensez à changer votre mot de passe (onglet Administrateurs) avant l\u2019ouverture.', 'error');
         setTimeout(() => showAdmin('team'), 600);
     }
     return false;
@@ -793,11 +793,11 @@ function renderGuide() {
         : '';
 }
 const OB_ITEMS = [
-    {id: 'pw', label: 'Changer les mots de passe par défaut (onglet Équipe)'},
+    {id: 'pw', label: 'Changer les mots de passe par défaut (onglet Administrateurs)'},
     {id: 'wa', label: 'Renseigner le vrai numéro WhatsApp + les numéros MoMo (onglet Contenu du site)'},
     {id: 'prices', label: 'Vérifier les prix et photos du catalogue (onglet Tarifs)'},
     {id: 'test', label: 'Tester une commande complète de bout en bout (mode démo)'},
-    {id: 'backup', label: 'Exporter une première sauvegarde (onglet Équipe)'}
+    {id: 'backup', label: 'Exporter une première sauvegarde (onglet Administrateurs)'}
 ];
 function renderOnboarding() {
     const box = $('onboarding-box');
