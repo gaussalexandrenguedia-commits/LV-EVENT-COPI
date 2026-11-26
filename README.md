@@ -2,9 +2,11 @@
 
 Application web de réservation et de gestion d'anniversaires surprises sur mesure : décorations, gâteaux personnalisés, bouquets d'argent, paniers gourmands et animations musicales.
 
-> ⚠️ **État actuel : site corrigé et prêt pour l'étape hébergement.**
-> Voir [`DEPLOY.md`](DEPLOY.md) pour la checklist de mise en service (domaine, HTTPS, Supabase, paiements).
-> Les problèmes corrigés avant hébergement sont listés en bas de ce fichier.
+> ✅ **État actuel : site en ligne, synchronisé et sécurisé.**
+> - Site public : **https://lv-surprise-event.vercel.app**
+> - Base de données : Supabase (`lv-surprise-event`) — tarifs, textes, commandes et finances partagés
+> - Les rôles (Super Admin / Manager) sont **vérifiés par la base de données**, pas par le navigateur
+> Voir [`DEPLOY.md`](DEPLOY.md) pour la checklist de mise en service.
 
 ## 🚀 Fonctionnalités
 
@@ -17,11 +19,15 @@ Application web de réservation et de gestion d'anniversaires surprises sur mesu
 - **Suivi commande sécurisé** : référence **+** téléphone requis (plus de recherche par téléphone seul).
 - **Pages légales** : CGV, paiements & annulation, confidentialité, mentions légales, page contact.
 
-### 🔐 Espace Pro — 2 administrateurs
+### 🔐 Espace Pro — rôles réels (contrôlés par le serveur)
 | Rôle | Droits |
 |---|---|
 | 👑 Super Admin | Tous droits (catalogue, photos, contenus, tarifs, suppressions, comptes, sauvegarde) |
 | 🧑‍💼 Manager | Commandes, finances, prestataires (catalogue & contenus en lecture seule) |
+
+Les permissions sont appliquées par PostgreSQL (RLS + fonctions `is_admin()` / `is_super()`) :
+un Manager ne peut pas modifier les tarifs même en manipulant son navigateur. La gestion des
+comptes (ajout, réinitialisation de mot de passe, retrait) se fait dans l'onglet **Administrateurs**.
 
 - **📊 Tableau de bord** : CA, encaissé, bénéfice net, marge, panier moyen, reste à encaisser, alertes, graphiques.
 - **🧾 Commandes** : recherche, filtres, détail, statuts, encaissement acompte/solde, paiement musiciens, facture imprimable, export CSV.
@@ -32,16 +38,25 @@ Application web de réservation et de gestion d'anniversaires surprises sur mesu
 - **💾 Sauvegarde** : export/import complet en JSON (les comptes ne sont jamais exportés).
 - **👥 Administrateurs** : rôles, changement de mot de passe (10 caractères min).
 
-### 🔒 Sécurité (corrigée)
-- Mots de passe **hachés SHA-256 salés** — plus jamais en clair dans le code.
+### 🔒 Sécurité
+- Mots de passe **hachés en bcrypt côté serveur** (pgcrypto) — le navigateur n'envoie jamais de hash.
+- Connexion par **jeton opaque** (`admin_sessions`) transmis dans l'en-tête `x-admin-token`.
 - **Changement forcé** au premier login pour les comptes par défaut.
-- Verrouillage après 5 tentatives (60 s), session admin expirant après 2 h.
+- Verrouillage après 5 tentatives (60 s côté serveur), session admin expirant après 12 h.
+- Le client ne peut **pas** lire les commandes des autres : la lecture est refusée par la base ;
+  le suivi passe par `track_order(référence + téléphone)`.
 - Captcha mathématique + champ piège anti-robots, validation téléphone camerounais, anti-double-envoi.
 - Suivi commande : référence + téléphone obligatoires.
 
-### 💾 Données
-Persistance locale via `localStorage` en mode autonome. **Aucune donnée de démonstration n'est chargée automatiquement** : le site démarre vide. Les données de test se chargent uniquement depuis l'admin (Zone dangereuse → « Charger des données de test »), à purger avant l'ouverture.
-La migration vers une base partagée multi-appareils (Supabase) est préparée : voir `supabase/schema.sql`, `js/config.js` et `DEPLOY.md`.
+### 💾 Données (synchronisées)
+- `site_content` (Supabase) : catalogue, textes, photos, coordonnées, réglages → **lecture publique**.
+- `orders`, `transactions`, `providers` → lecture réservée aux administrateurs connectés.
+- `admins`, `admin_sessions` → jamais accessibles directement (uniquement via fonctions sécurisées).
+- Un cache `localStorage` sert de secours hors ligne ; le badge **🟢 Synchronisé** (ou 💾 Mode local)
+  en haut de l'espace Pro indique l'état de la connexion.
+- **Aucune donnée de démonstration n'est chargée automatiquement** : le site démarre vide.
+- Les changements faits dans l'admin (prix, photos, textes) sont **publiés immédiatement** pour tous
+  les visiteurs, sur tous les appareils — plus besoin de modifier le code.
 
 ## 🛠️ Technologies
 - HTML5, CSS3 (responsive), JavaScript Vanilla (ES6+, graphiques canvas maison, sans dépendance)
@@ -49,13 +64,14 @@ La migration vers une base partagée multi-appareils (Supabase) est préparée :
 
 ## 📁 Structure
 ```text
-mon-premier-projet/
+LV-EVENT-COPI/
 ├── index.html            # Pages client + espace admin + pages légales
 ├── css/style.css         # Design system (client + admin, responsive)
 ├── js/
-│   ├── config.js         # Config Supabase/WhatsApp (à remplir à l'hébergement)
+│   ├── config.js         # URL + clé publishable Supabase (déjà rempli)
+│   ├── cloud.js          # Couche Supabase : sessions, commandes, contenus
 │   └── app.js            # Catalogue, devis, commandes, dashboard, finances, auth
-├── supabase/schema.sql   # Schéma BDD à exécuter à l'étape hébergement
+├── supabase/schema.sql   # Référence du schéma (base déjà créée)
 ├── images/               # Visuels : hero, gâteaux, prestations
 ├── favicon.svg / manifest.webmanifest / robots.txt / sitemap.xml
 ├── DEPLOY.md             # Checklist de mise en service
@@ -79,4 +95,4 @@ python3 -m http.server 8000
 8. **Anti-spam** : captcha, honeypot, validation téléphone CM, consentement CGV, anti-double-envoi.
 9. **SEO/social** : Open Graph, Twitter Card, JSON-LD LocalBusiness, favicon, manifest, robots/sitemap, images en lazy-loading.
 10. **Sauvegarde** : export/import JSON complet depuis l'admin.
-11. **Préparation Supabase** : schéma SQL + couche de config prêts pour l'étape hébergement (voir `DEPLOY.md`).
+11. **Supabase en service** : schéma appliqué, synchronisation multi-appareils active, rôles appliqués par PostgreSQL (voir `DEPLOY.md`).
