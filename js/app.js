@@ -104,7 +104,7 @@ const DEFAULT_PRESTATIONS = [
      includes: '1h de live · Sonorisation · Playlist dédicacée'}
 ];
 /* Mots de passe par défaut UNIQUEMENT sous forme hachée (SHA-256 salé).
-   ⚠️ À CHANGER immédiatement après la première connexion (onglet Administrateurs),
+   ⚠️ À CHANGER immédiatement après la première connexion (onglet Équipe),
    et à supprimer du README / de tout document public. */
 const DEFAULT_ADMINS = [
     {username: 'vanelle', passwordHash: 'e91bb635ed044f5dae7ce74e75049a7bb77b280c25d81bcb5b998fe01c2acd39', role: 'super', name: 'Vanelle L.', title: 'Fondatrice', mustChangePassword: true},
@@ -241,44 +241,12 @@ async function migrateAdminPasswords() {
 }
 const isSuper = () => currentAdmin()?.role === 'super';
 
-/* ─────────── MENUS MOBILES (tiroirs) ─────────── */
-/* Un seul tiroir ouvert à la fois ; le fond assombri bloque la page derrière. */
-function updateDrawerState() {
-    const navOpen = Boolean($('main-nav') && $('main-nav').classList.contains('open'));
-    const sideOpen = Boolean($('admin-sidebar') && $('admin-sidebar').classList.contains('open'));
-    document.body.classList.toggle('drawer-open', navOpen || sideOpen);
-    const backdrop = $('nav-backdrop');
-    if (backdrop) backdrop.classList.toggle('show', navOpen || sideOpen);
-    [$('burger'), $('admin-burger')].forEach(b => {
-        if (b) b.setAttribute('aria-expanded', String(b === $('burger') ? navOpen : sideOpen));
-    });
-}
-function closeDrawers() {
-    const nav = $('main-nav'); if (nav) nav.classList.remove('open');
-    const side = $('admin-sidebar'); if (side) side.classList.remove('open');
-    updateDrawerState();
-}
-function toggleNav() {
-    const nav = $('main-nav'); if (!nav) return;
-    const willOpen = !nav.classList.contains('open');
-    closeDrawers();
-    if (willOpen) nav.classList.add('open');
-    updateDrawerState();
-}
-function toggleAdminSidebar() {
-    const side = $('admin-sidebar'); if (!side) return;
-    const willOpen = !side.classList.contains('open');
-    closeDrawers();
-    if (willOpen) side.classList.add('open');
-    updateDrawerState();
-}
-
 /* ─────────── NAVIGATION CLIENT ─────────── */
 function showView(name) {
     document.querySelectorAll('#client-app .view').forEach(v => v.classList.add('hidden'));
     $('view-' + name).classList.remove('hidden');
     document.querySelectorAll('.main-nav a').forEach(a => a.classList.toggle('active', a.dataset.nav === name));
-    closeDrawers();
+    $('main-nav').classList.remove('open');
     if (name === 'booking') { renderCart(); newCaptcha(); }
     window.scrollTo({top: 0, behavior: 'smooth'});
 }
@@ -680,13 +648,12 @@ async function doLogin(e) {
     closeLogin(); enterAdmin();
     toast(`Bienvenue ${admin.name} 👑`, 'success');
     if (admin.mustChangePassword) {
-        toast('⚠️ Pensez à changer votre mot de passe (onglet Administrateurs) avant l\u2019ouverture.', 'error');
+        toast('⚠️ Pensez à changer votre mot de passe (onglet Équipe) avant l\u2019ouverture.', 'error');
         setTimeout(() => showAdmin('team'), 600);
     }
     return false;
 }
 function logout() {
-    closeDrawers();
     store.del('lv_session');
     if (cloudOn()) { LVCloud.logout().catch(() => {}); }
     exitAdmin();
@@ -726,7 +693,6 @@ function renderCloudBadge() {
     el.title = 'Commandes, tarifs et contenus enregistrés sur le serveur : visibles sur tous vos appareils.';
 }
 function enterAdmin() {
-    closeDrawers();
     $('client-app').classList.add('hidden');
     $('site-header').classList.add('hidden');
     $('site-footer').classList.add('hidden');
@@ -768,7 +734,7 @@ function showAdmin(name) {
     document.querySelectorAll('.admin-view').forEach(v => v.classList.add('hidden'));
     $('admin-' + name).classList.remove('hidden');
     document.querySelectorAll('.admin-nav button').forEach(b => b.classList.toggle('active', b.dataset.admin === name));
-    closeDrawers();
+    $('admin-sidebar').classList.remove('open');
     const titles = {dashboard: 'Tableau de bord', orders: 'Commandes', finance: 'Gestion financière', providers: 'Prestataires', pricing: 'Tarifs & catalogue', site: 'Contenu du site', team: 'Administrateurs', guide: 'Guide d\u2019utilisation'};
     $('admin-title').textContent = titles[name];
     if (name === 'dashboard') renderDashboard();
@@ -793,11 +759,11 @@ function renderGuide() {
         : '';
 }
 const OB_ITEMS = [
-    {id: 'pw', label: 'Changer les mots de passe par défaut (onglet Administrateurs)'},
+    {id: 'pw', label: 'Changer les mots de passe par défaut (onglet Équipe)'},
     {id: 'wa', label: 'Renseigner le vrai numéro WhatsApp + les numéros MoMo (onglet Contenu du site)'},
     {id: 'prices', label: 'Vérifier les prix et photos du catalogue (onglet Tarifs)'},
     {id: 'test', label: 'Tester une commande complète de bout en bout (mode démo)'},
-    {id: 'backup', label: 'Exporter une première sauvegarde (onglet Administrateurs)'}
+    {id: 'backup', label: 'Exporter une première sauvegarde (onglet Équipe)'}
 ];
 function renderOnboarding() {
     const box = $('onboarding-box');
@@ -1737,20 +1703,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.modal-overlay').forEach(m =>
         m.addEventListener('click', (e) => { if (e.target === m) m.classList.add('hidden'); }));
     document.addEventListener('keydown', (e) => {
-        if (e.key !== 'Escape') return;
-        document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
-        closeDrawers();
+        if (e.key === 'Escape') document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
     });
-    /* Fond assombri : un appui referme le tiroir (menu ou espace pro) */
-    const backdrop = $('nav-backdrop');
-    if (backdrop) backdrop.addEventListener('click', closeDrawers);
-    let wasNarrow = window.innerWidth <= 960;
     window.addEventListener('resize', () => {
-        const narrow = window.innerWidth <= 960;
-        // Rotation, changement de palier ou retour sur grand écran : on range les tiroirs
-        // (le clavier virtuel, lui, ne franchit jamais le palier → le menu reste ouvert).
-        if (!narrow || narrow !== wasNarrow) closeDrawers();
-        wasNarrow = narrow;
         if (!$('admin-app').classList.contains('hidden') && !$('admin-dashboard').classList.contains('hidden')) renderDashboard();
     });
 
